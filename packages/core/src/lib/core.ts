@@ -1,0 +1,8 @@
+export type {
+  ComponentRegistry,
+  ComponentName,
+  ComponentType,
+} from './Component';
+export type { ResourceRegistry, ResourceName, ResourceType } from './Resource';
+export { World } from './World';
+export { clone, Clone } from './Data';
