@@ -1,0 +1,8 @@
+{
+  "name": "@ffg-engine/sandbox",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@ffg-engine/core": "workspace:^"
+  }
+}

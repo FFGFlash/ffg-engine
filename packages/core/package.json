@@ -17,5 +17,13 @@
   "files": [
     "dist",
     "!**/*.tsbuildinfo"
-  ]
+  ],
+  "dependencies": {
+    "clone-deep": "^4.0.1",
+    "raf": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/raf": "^3.4.3",
+    "@types/clone-deep": "^4.0.1"
+  }
 }

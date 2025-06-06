@@ -1,4 +1,4 @@
-const { withNx } = require('@nx/rollup/with-nx');
+const { withNx } = require('@nx/rollup/with-nx')
 
 module.exports = withNx(
   {
@@ -14,4 +14,4 @@ module.exports = withNx(
     // e.g.
     // output: { sourcemap: true },
   }
-);
+)
