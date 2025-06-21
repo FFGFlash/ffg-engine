@@ -1,0 +1,28 @@
+{
+  "name": "@ffg-engine/core",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {
+    "@ffg-engine/ecs": "workspace:^",
+    "raf": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/raf": "^3.4.3"
+  }
+}
