@@ -112,7 +112,9 @@ export class System<Args extends readonly unknown[] = any> {
    * @param declaration The declaration object that defines the system.
    * @returns A new instance of the System class created from the declaration.
    */
-  static from<A extends readonly unknown[]>(declaration: SystemDeclaration<A>): System<A> {
+  static from<A extends readonly unknown[]>(
+    declaration: SystemDeclaration<Readonly<A>>
+  ): System<A> {
     const system = new System<A>()
     system._getDeps = declaration.deps
     system._fn = declaration.callback
