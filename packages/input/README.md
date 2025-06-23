@@ -12,7 +12,7 @@ const engine = new Engine()
   .registerComponents('player', 'position', 'velocity')
   .addPlugin(InputPlugin)
 // You can also configure a specific element to attach the event listeners to, such as a canvas.
-// .addPlugin(InputPlugin.configure({ element: canvas }))
+// .addPlugin(InputPlugin.configure({ target: canvas }))
 
 const updatePlayerMovement = System.from({
   deps: data => [data.query.write('velocity').with('player'), data.res('input')],

@@ -1,7 +1,7 @@
 import { Plugin, Symbols, System, SystemType } from '@ffg-engine/core'
 
 export interface InputPluginConfig {
-  element: EventTarget
+  target: EventTarget
 }
 
 let InputSystem: System
@@ -11,20 +11,20 @@ export const InputPlugin = Plugin.create<InputPluginConfig>({
 
   addOptions() {
     return {
-      element: window,
+      target: window,
     }
   },
 
   onStart({ engine }) {
-    const { element } = this.options
+    const { target } = this.options
     const setup = (InputSystem ??= System.from({
       name: 'input-system',
       deps: data => [data.mutRes('input')],
       callback: input => {
-        if (element instanceof HTMLElement || element instanceof SVGElement) element.tabIndex = 0
-        element.addEventListener('keydown', e => input.set((e as KeyboardEvent).key, 1))
-        element.addEventListener('keyup', e => input.set((e as KeyboardEvent).key, 0))
-        element.addEventListener('blur', () => input.clear())
+        if (target instanceof HTMLElement || target instanceof SVGElement) target.tabIndex = 0
+        target.addEventListener('keydown', e => input.set((e as KeyboardEvent).key, 1))
+        target.addEventListener('keyup', e => input.set((e as KeyboardEvent).key, 0))
+        target.addEventListener('blur', () => input.clear())
       },
     }))
 

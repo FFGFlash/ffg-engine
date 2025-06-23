@@ -17,7 +17,7 @@ export class AppElement extends HTMLElement {
     if (!context) throw new Error('Failed to get canvas context')
 
     const engine = (window.engine = new Engine().addPlugin(
-      InputPlugin.configure({ element: canvas })
+      InputPlugin.configure({ target: canvas })
     ))
 
     const world = engine.world
