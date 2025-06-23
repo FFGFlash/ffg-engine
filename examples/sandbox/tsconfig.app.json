@@ -22,6 +22,9 @@
   "references": [
     {
       "path": "../../packages/ecs/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/core/tsconfig.lib.json"
     }
   ]
 }

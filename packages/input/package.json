@@ -1,5 +1,5 @@
 {
-  "name": "@ffg-engine/core",
+  "name": "@ffg-engine/input",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,11 +19,6 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@ffg-engine/ecs": "workspace:^",
-    "eventemitter3": "^5.0.1",
-    "raf": "^3.4.1"
-  },
-  "devDependencies": {
-    "@types/raf": "^3.4.3"
+    "@ffg-engine/core": "workspace:^"
   }
 }

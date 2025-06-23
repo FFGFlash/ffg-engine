@@ -1,5 +1,7 @@
+import { EventEmitter } from 'eventemitter3'
 import { World } from '@ffg-engine/ecs'
 import raf from 'raf'
+import { Plugin, PluginManager } from './plugin.js'
 
 export enum SystemType {
   STARTUP = 'startup',
@@ -8,7 +10,15 @@ export enum SystemType {
   UPDATE = 'update',
 }
 
-export class Engine {
+export interface EngineEventMap {
+  start: [event: { engine: Engine }]
+  stop: [event: { engine: Engine }]
+  pause: [event: { engine: Engine }]
+  resume: [event: { engine: Engine }]
+}
+
+export class Engine extends EventEmitter<EngineEventMap> {
+  private _plugins = new PluginManager(this)
   private _world = new World<SystemType>()
   private _handle: number | null = null
 
@@ -19,6 +29,8 @@ export class Engine {
   private _frame = 0
 
   constructor() {
+    super()
+
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
 
@@ -71,6 +83,12 @@ export class Engine {
    * Defaults to 1000 / 60 (60 FPS).
    */
   async start(timestep = 1000 / 60) {
+    if (this._handle != null) return
+
+    this._plugins.setupPlugins()
+
+    this.emit('start', { engine: this })
+
     const time = this._world.getResource('time')
 
     this._elapsed = 0
@@ -126,6 +144,7 @@ export class Engine {
    */
   stop() {
     if (this._handle == null) return
+    this.emit('stop', { engine: this })
     raf.cancel(this._handle)
     this._handle = null
   }
@@ -135,6 +154,7 @@ export class Engine {
    * This effectively stops all time-dependent systems from updating.
    */
   pause() {
+    this.emit('pause', { engine: this })
     return this.setTimeScale(0)
   }
 
@@ -143,6 +163,7 @@ export class Engine {
    * This restores the time scale to normal (1), allowing systems to update again.
    */
   resume() {
+    this.emit('resume', { engine: this })
     return this.setTimeScale(1)
   }
 
@@ -155,6 +176,22 @@ export class Engine {
   setTimeScale(scale: number) {
     const time = this._world.getResource('time')
     time.timeScale = scale
+  }
+
+  addPlugin(plugin: Plugin) {
+    this._plugins.add(plugin)
+    return this
+  }
+
+  get plugins() {
+    return this._plugins.plugins
+  }
+
+  removePlugin(name: string): this
+  removePlugin(plugin: Plugin): this
+  removePlugin(pluginOrName: Plugin | string) {
+    this._plugins.remove(pluginOrName)
+    return this
   }
 }
 

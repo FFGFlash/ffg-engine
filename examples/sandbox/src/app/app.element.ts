@@ -1,5 +1,6 @@
 import { Engine, SystemType } from '@ffg-engine/core'
 import styles from './app.module.css'
+import { InputPlugin } from '@ffg-engine/input'
 
 export class AppElement extends HTMLElement {
   public static observedAttributes = []
@@ -12,51 +13,54 @@ export class AppElement extends HTMLElement {
     canvas.height = 600
     this.appendChild(canvas)
 
-    const engine = new Engine()
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Failed to get canvas context')
+
+    const engine = (window.engine = new Engine().addPlugin(
+      InputPlugin.configure({ element: canvas })
+    ))
 
     const world = engine.world
-      .registerComponents('player', 'position', 'velocity', 'circle', 'rectangle', 'color')
-      .addResource('canvas', { value: canvas })
-      .addResource('context', { value: null })
-      .addResource('input', new Map())
+      .registerComponents(
+        'player',
+        'position',
+        'velocity',
+        'circle',
+        'rectangle',
+        'color',
+        'friction'
+      )
+      .addResource('context', context)
       .addResource('debug', { fps: 0, averageFPS: 0 })
-
-    const setupCanvas = world
-      .createSystem()
-      .deps(data => [data.mutRes('canvas'), data.mutRes('context'), data.mutRes('input')])
-      .callback((canvas, context, input) => {
-        context.value = canvas.value.getContext('2d')
-        if (!context.value) throw new Error('Failed to get canvas context')
-
-        canvas.value.tabIndex = 0
-
-        canvas.value.addEventListener('keydown', e => {
-          input.set(e.key, 1)
-          console.log(`Key pressed: ${e.key}`)
-        })
-
-        canvas.value.addEventListener('keyup', e => {
-          input.set(e.key, 0)
-          console.log(`Key released: ${e.key}`)
-        })
-
-        canvas.value.addEventListener('blur', () => {
-          input.clear()
-        })
-      })
 
     const startup = world
       .createSystem()
-      .deps(data => [data.commands.spawn, data.res('canvas')])
-      .after(setupCanvas)
-      .callback((spawn, canvas) => {
+      .deps(data => [data.commands.spawn, data.res('context')])
+      .callback((spawn, context) => {
+        const canvas = context.canvas
+        const halfWidth = canvas.width / 2
+        const halfHeight = canvas.height / 2
+
         spawn({
           player: {},
-          position: { x: canvas.value.width / 2, y: canvas.value.height / 2 },
+          position: { x: halfWidth, y: halfHeight },
           velocity: { x: 0, y: 0 },
           circle: { radius: 10 },
           color: { value: 'blue' },
         })
+
+        for (let i = 0; i < 10000; i++) {
+          spawn({
+            position: {
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+            },
+            velocity: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 },
+            circle: { radius: 5 + Math.random() * 15 },
+            color: { value: `hsl(${Math.random() * 360}, 100%, 50%)` },
+            friction: { strength: 1 },
+          })
+        }
       })
 
     const updatePlayerMovement = world
@@ -64,14 +68,8 @@ export class AppElement extends HTMLElement {
       .deps(data => [data.query.write('velocity').with('player'), data.res('input')])
       .callback((query, input) => {
         for (const [, vel] of query) {
-          vel.x =
-            ((input.get('ArrowRight') || input.get('d') || 0) -
-              (input.get('ArrowLeft') || input.get('a') || 0)) *
-            250
-          vel.y =
-            ((input.get('ArrowDown') || input.get('s') || 0) -
-              (input.get('ArrowUp') || input.get('w') || 0)) *
-            250
+          vel.x = (input.get('ArrowRight', 'd') - input.get('ArrowLeft', 'a')) * 250
+          vel.y = (input.get('ArrowDown', 's') - input.get('ArrowUp', 'w')) * 250
         }
       })
 
@@ -83,6 +81,29 @@ export class AppElement extends HTMLElement {
         for (const [, position, velocity] of query) {
           position.x += velocity.x * time.delta
           position.y += velocity.y * time.delta
+        }
+      })
+
+    const updateFriction = world
+      .createSystem()
+      .deps(data => [data.query.write('velocity').read('friction'), data.res('time')])
+      .before(updatePositions)
+      .callback((query, time) => {
+        for (const [, velocity, friction] of query) {
+          if (friction.strength <= 0 || (velocity.x === 0 && velocity.y === 0)) continue
+
+          const mag = Math.sqrt(velocity.x ** 2 + velocity.y ** 2)
+          if (mag < 0.01) {
+            velocity.x = 0
+            velocity.y = 0
+            continue
+          }
+
+          const normalizedX = velocity.x / mag
+          const normalizedY = velocity.y / mag
+
+          velocity.x -= normalizedX * friction.strength * time.delta
+          velocity.y -= normalizedY * friction.strength * time.delta
         }
       })
 
@@ -108,9 +129,8 @@ export class AppElement extends HTMLElement {
       .createSystem()
       .deps(data => [data.mutRes('context')])
       .callback(context => {
-        if (!context.value) return
-        context.value.fillStyle = 'white'
-        context.value.fillRect(0, 0, context.value.canvas.width, context.value.canvas.height)
+        context.fillStyle = 'white'
+        context.fillRect(0, 0, context.canvas.width, context.canvas.height)
       })
 
     const drawFPS = world
@@ -118,11 +138,10 @@ export class AppElement extends HTMLElement {
       .deps(data => [data.mutRes('context'), data.res('debug')])
       .after(clearCanvas)
       .callback((context, debug) => {
-        if (!context.value) return
-        context.value.fillStyle = 'black'
-        context.value.font = '16px Arial'
-        context.value.fillText(`FPS: ${debug.fps}`, 10, 20)
-        context.value.fillText(`Avg FPS: ${debug.averageFPS}`, 10, 40)
+        context.fillStyle = 'black'
+        context.font = '16px Arial'
+        context.fillText(`FPS: ${debug.fps}`, 10, 20)
+        context.fillText(`Avg FPS: ${debug.averageFPS}`, 10, 40)
       })
 
     const drawCircles = world
@@ -131,13 +150,12 @@ export class AppElement extends HTMLElement {
       .after(clearCanvas)
       .before(drawFPS)
       .callback((query, context) => {
-        if (!context.value) return
         for (const [, position, circle, color] of query) {
-          context.value.fillStyle = color.value
-          context.value.beginPath()
-          context.value.arc(position.x, position.y, circle.radius, 0, Math.PI * 2)
-          context.value.fill()
-          context.value.closePath()
+          context.fillStyle = color.value
+          context.beginPath()
+          context.arc(position.x, position.y, circle.radius, 0, Math.PI * 2)
+          context.fill()
+          context.closePath()
         }
       })
 
@@ -147,10 +165,9 @@ export class AppElement extends HTMLElement {
       .after(clearCanvas)
       .before(drawFPS)
       .callback((query, context) => {
-        if (!context.value) return
         for (const [, position, rectangle, color] of query) {
-          context.value.fillStyle = color.value
-          context.value.fillRect(
+          context.fillStyle = color.value
+          context.fillRect(
             position.x - rectangle.width / 2,
             position.y - rectangle.height / 2,
             rectangle.width,
@@ -160,8 +177,13 @@ export class AppElement extends HTMLElement {
       })
 
     world
-      .registerSystems(SystemType.STARTUP, startup, setupCanvas)
-      .registerSystems(SystemType.FIXED_UPDATE, updatePositions, updatePlayerMovement)
+      .registerSystems(SystemType.STARTUP, startup)
+      .registerSystems(
+        SystemType.FIXED_UPDATE,
+        updatePositions,
+        updatePlayerMovement,
+        updateFriction
+      )
       .registerSystems(SystemType.UPDATE, updateDebugInfo)
       .registerSystems(SystemType.RENDER, drawFPS, drawCircles, drawRectangles, clearCanvas)
 
@@ -170,7 +192,7 @@ export class AppElement extends HTMLElement {
 }
 customElements.define('ffg-engine-root', AppElement)
 
-declare module '@ffg-engine/ecs' {
+declare module '@ffg-engine/core' {
   interface ComponentRegistry {
     player: Record<never, never>
     position: { x: number; y: number }
@@ -178,12 +200,17 @@ declare module '@ffg-engine/ecs' {
     circle: { radius: number }
     rectangle: { width: number; height: number }
     color: { value: string }
+    friction: { strength: number }
   }
 
   interface ResourceRegistry {
-    canvas: { value: HTMLCanvasElement }
-    context: { value: CanvasRenderingContext2D | null }
-    input: Map<string, number>
+    context: CanvasRenderingContext2D
     debug: { fps: number; averageFPS: number; _fpsConunter?: number; _fpsElapsed?: number }
+  }
+}
+
+declare global {
+  interface Window {
+    engine: Engine
   }
 }

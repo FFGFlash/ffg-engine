@@ -4,13 +4,13 @@
   "include": [],
   "references": [
     {
-      "path": "../../packages/ecs"
+      "path": "../core"
     },
     {
-      "path": "../../packages/core"
+      "path": "./tsconfig.lib.json"
     },
     {
-      "path": "./tsconfig.app.json"
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@ffg-engine/core": "workspace:^",
-    "@ffg-engine/ecs": "workspace:^"
+    "@ffg-engine/ecs": "workspace:^",
+    "@ffg-engine/input": "workspace:^"
   }
 }

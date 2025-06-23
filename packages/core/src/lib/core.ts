@@ -9,3 +9,4 @@ export type {
   Entity,
 } from '@ffg-engine/ecs'
 export { System, Symbols, clone } from '@ffg-engine/ecs'
+export { Plugin } from './plugin.js'
