@@ -32,3 +32,43 @@ await engine.start(1000 / 60)
 // we can also scale said delta by a factor, the timeScale, this can be controlled via the engine with the methods `pause`, `resume` and `setTimeScale` or can be mutated via the resource.
 const time = world.getResource('time')
 ```
+
+### Plugins [WIP]
+
+Plugins allow for quick and simple extendability with the engine, adding things like resources, systems or even components and hopefuly much more in the future.
+
+For an example check out the [Input](../input/) plugin
+
+```ts
+import { Plugin } from '@ffg-engine/core'
+
+interface MyPluginOptions {
+  debug: boolean
+}
+
+export const MyPlugin = Plugin.create<MyPluginOptions>({
+  name: 'my-plugin',
+
+  addOptions() {
+    return {
+      debug: false,
+    }
+  },
+
+  onStart({ engine }) {
+    // ... Do something when the `Engine.start` method is invoked.
+  },
+
+  onStop({ engine }) {
+    // ... Do something when the `Engine.stop` method is invoked.
+  },
+
+  onPause({ engine }) {
+    // ... Do something when the `Engine.pause` method is invoked.
+  },
+
+  onResume({ engine }) {
+    // ... Do something when the `Engine.resume` method is invoked.
+  },
+})
+```

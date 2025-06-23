@@ -11,3 +11,5 @@ A game engine that follows data-oriented design (DOD) and implements an entity-c
 
 - [Understanding the Engine](packages/core/README.md)
 - [Understanding the ECS](packages/ecs/README.md)
+- Addons
+  - [Input Handling](packages/input/README.md)

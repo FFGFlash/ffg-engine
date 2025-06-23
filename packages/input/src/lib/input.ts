@@ -1,7 +1,7 @@
 import { Plugin, Symbols, System, SystemType } from '@ffg-engine/core'
 
 export interface InputPluginConfig {
-  element: Window | HTMLElement
+  element: EventTarget
 }
 
 let InputSystem: System
@@ -21,7 +21,7 @@ export const InputPlugin = Plugin.create<InputPluginConfig>({
       name: 'input-system',
       deps: data => [data.mutRes('input')],
       callback: input => {
-        if (element instanceof HTMLElement) element.tabIndex = 0
+        if (element instanceof HTMLElement || element instanceof SVGElement) element.tabIndex = 0
         element.addEventListener('keydown', e => input.set((e as KeyboardEvent).key, 1))
         element.addEventListener('keyup', e => input.set((e as KeyboardEvent).key, 0))
         element.addEventListener('blur', () => input.clear())
@@ -65,3 +65,5 @@ declare module '@ffg-engine/core' {
     input: InputMap
   }
 }
+
+export default InputPlugin
