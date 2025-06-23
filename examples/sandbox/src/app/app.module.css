@@ -1,5 +1,13 @@
 .app > canvas {
   display: block;
   border: 1px solid black;
-  margin: 0 auto;
+  max-height: 100%;
+}
+
+.app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
